@@ -1,2 +1,2 @@
-# An-lisis-Num-rico-2022-2-SHS
+# Analisis_Numerico-2022-2-SHS
 Investigation project
