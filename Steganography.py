@@ -2,7 +2,39 @@ from PIL import Image
 from collections import deque
 import base64
 
+def cipher(txt , n):
+    lista= list(txt)
+    for i in range(len(lista)):
+        k= ord(lista[i])
+        k=k+n
+        if k>126 :  ##Limite tabla ASCII
+            k=(k%126)+31  ##Los primeros 32 son funciones de caracteres de control
+            
+        lista[i]= chr(k)
+        txt= ''.join(lista)
+    return txt
 
+def decipher(txt , n):
+    lista= list(txt)
+    for i in range(len(lista)):
+        k= ord(lista[i])
+        k=k-n
+        if k<32:
+            k=k+95      ##126-31=95
+        lista[i]= chr(k)
+        txt= ''.join(lista)
+    return txt
+
+def getKey(txt):
+    lista= list(txt)
+    sum=0
+    for i in range(len(lista)):
+        k= ord(lista[i])
+        sum=k+sum
+    n=sum%126
+    if n==0:
+        n=25
+    return n
 
 def binary_to_string(message):
     b64 = message.encode("utf8")
@@ -130,55 +162,68 @@ def readImage(image1):
 
 
 
-    #Imagen a ingresar 
-image1= Image.open('2257-paisajes.jpg') 
-#image1= Image.open('Encrypted.jpg')
 
-width , height = image1.size
+#image1= Image.open('2257-paisajes.jpg') 
+
+
+
 
     #fin del mensaje
 EOM= "010101010100011101101100011101010101100100110010011010000110110001001001010001110100111000110001011000110110110101101100011101100110001100110010001110000011110100001010"
 
-#'''   
-
-    #Mensaje a esconder
-message='Hola terricolas' 
-
-    #pasar el mensaje a binario y luego convertirlo en lista
-binary= binary_to_string(message)
-text=[]
-text[:0]= binary
-
-    #Preparar imagen cambiando los LSB por 0
-##printSample(image1 , 20)
-image1=setImage(image1)
-##printSample(image1 , 20)
-
-    #Esconder texto en la imagen y guardarla
-image1=hideText(image1 , text)
-
-#printSample(image1,20)
 
 
-    # Se debe guardar el archivo en .tif para no tener perdida de informacion al guardar la imagen
-image1.save('Encrypted.tif')
-##'''
+loop=True
+while loop:
+    print("1| Esconder mensaje")
+    print("2| Leer imagen")
+    print("3| Salir ")
+    x=int(input("Que desea hacer? Escriba el numero: "))
+    
+    if x==1:
+        #Imagen a ingresar 
+        ImgName=input("Ingrese el nombre de la imagen con la extension: ")
+        image1=Image.open(ImgName)
+        
+        width , height = image1.size
+        
+        message= input("Ingrese el mensaje que desea esconder: ")
+        pwd= input("Ingrese una contrasena: ")
+        key= getKey(pwd)
+        print("Espere un momento...")
+        #Cifrar el mensaje, pasarlo a binario y convertirlo en lista
+        message= cipher(message, key)
+        binary= binary_to_string(message)
+        text=[]
+        text[:0]= binary
+        
+        #Preparar imagen cambiando los LSB por 0
+        image1=setImage(image1)
+        
+        #Esconder texto en la imagen y guardarla
+        image1=hideText(image1 , text)
+        # Se debe guardar el archivo en .tif para no tener perdida de informacion al guardar la imagen
+        image1.save('Encrypted.tif')
+        print("La imagen se ha guardado con el nombre: Encrypted.tif")
+        
+    if x==2:
+        ImgName=input("Ingrese el nombre de la imagen con la extension .tif: ")
+        image2= Image.open(ImgName)
+        width , height = image2.size
+        pwd= input("Ingrese la contrasena de la imagen: ")
+        key= getKey(pwd)
+        print("Espere un momento...")        
 
+        #Extraer texto de la imagen
+        stack=readImage(image2)
+        txt= ''.join([str(x) for x in stack])
+        txt= string_to_binary(txt)
+        txt= decipher(txt, key)
+        print("El mensaje contenido en la imagen es: ")
+        print(txt)
+    
+    if x==3:
+        loop=False
+    print('-------------------------------')     
 
-#Descifrar
-#'''
-image2= Image.open('Encrypted.tif')
-
-
-    #Extraer texto de la imagen e imprimir
-#print('sample img2')
-#printSample(image2 , 20)
-stack=readImage(image2)
-txt= ''.join([str(x) for x in stack])
-#print(txt[:20])
-print(string_to_binary(txt))
-
-##'''
-#message= ""
-#binary= binary_to_string(message)
 print('-------------------------------')
